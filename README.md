@@ -2,10 +2,9 @@
 
 Data by [StepSecurity](https://www.stepsecurity.io/) — this is a thin
 re-publication of their [npm AI scan
-results](https://agent.api.stepsecurity.io/v1/application/oss-packages/npm/ai-scan-results)
+results](https://app.stepsecurity.io/oss-security-feed)
 as stable JSON endpoints, suitable for use in package-manager hooks (e.g.
-pnpm's `readPackage` / `auditPolicy`) or any tool that wants a current list of
-known-malicious npm packages.
+pnpm's `readPackage`)
 
 Currently, only yarn and pnpm support hooks, but these are only "workspace-specific", so
 global installs can bypass this.
@@ -60,24 +59,22 @@ export const hooks = {
 };
 ```
 
-Swap `high.json` for `critical.json` if you only want the highest-confidence
-malicious set.
+You can use either `high.json` or `critical.json` but I've found high to be reasonably high-signal
+for commonly-used dependencies with some fals positives, but these are rarely used packages.
 
-## Caching
-
-Responses carry `Cache-Control: public, max-age=60` and
-`Netlify-CDN-Cache-Control: public, s-maxage=60, stale-while-revalidate=300`,
-so the origin function runs at most once per minute per region. Expect new
-malicious packages to take up to a minute to appear after StepSecurity
-publishes them.
-
-CORS is open (`Access-Control-Allow-Origin: *`).
 
 ## Implementation
 
 A single Netlify Deno edge function (`netlify/edge-functions/scan.ts`) fans
 out to the StepSecurity API, paginates until exhausted, and serves the
 combined JSON. There is no build step and no stored state.
+
+## Threat Model
+
+If the site goes down, your pnpm installs will fail.
+If the site turns malicious, your pnpm installs will fail.
+
+But in none of the cases can the owner of the threat feed run malicious code on your system
 
 ## License & attribution
 
